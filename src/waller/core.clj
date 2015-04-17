@@ -2,6 +2,7 @@
   (:require [ragtime.core :refer [Migratable connection]]
             [travesedo.database :as tdb]
             [travesedo.collection :as tcol]
+            [travesedo.document :as tdoc]
             [clojure.string :as cstr]))
 
 (def ^:private base-conn {:type :simple})
@@ -61,12 +62,19 @@
   Migratable
   (add-migration-id [this id]
     (ensure-track-store! conn)
-    (println "Attempting to add id " id))
+    (tdoc/create {:conn conn, 
+                  :in-collection migration-col, 
+                  :db migration-db,
+                  :payload {:_key id}}))
+  
   (remove-migration-id [this id]
-    (println "Attempting to remove id " id))
+    (tdoc/delete (assoc :db migration-db,
+                        :_id (str migration-col "/" id))))
+  
   (applied-migration-ids[this]
-    (println "Attempting to get list")
-    []))
+    (:documents (tdoc/read-all-docs (assoc this :db migration-db
+                                      :in-collection migration-col
+                                      :type :key)))))
 
 (defn find-credentials 
   "Finds the credentials associated with the url, or an empty map if none"
