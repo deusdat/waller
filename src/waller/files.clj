@@ -2,7 +2,10 @@
   (:require [clojure.string :as cstr]
             [clojure.java.io :as io]
             [waller.core :as core]
-            [clojure.edn :as cedn])
+            [clojure.edn :as cedn]
+            [travesedo.database :as tdb]
+            [travesedo.collection :as tcol])
+  
   (:import java.net.URI))
 
 (def ^:private default-dir "migrations")
@@ -70,22 +73,30 @@
                     drop-collection))
 
 (defn pick-reaction [m db]
-  (let [reactions (remove nil? (apply reactors m))]
-    (assert (= 1 (count reactions)))
+  (let [reactions (remove nil? (reactors m))]
+    (assert (= 1 (count reactions)) (str "Non-nil reactions " 
+                                      (print-str reactions)))
     (first reactions)))
   
 
 (defmulti react pick-reaction)
 
 (defmethod react :create-database [edn db] 
-  (println "creating database" db)
-  )
+  (println "Attempting to create database: " (:db edn))
+  (let [req (assoc db
+             :payload (merge {:name (:db edn)} 
+                             (core/create-db-users db)))]
+  (tdb/create req)))
 
 (defmethod react :create-collection [edn db] 
-  (println "creating collection"))
+  (println "Creating a collection " edn)
+  (if (core/success? (tcol/create (assoc db :db (:db edn) 
+                                    :payload {:name (:collection-name edn)})))
+    :success
+    (throw (Exception. (str "Could not create collection from " edn)))))
 
 (defmethod react :drop-database [edn db]
-  (println "droping database"))
+  (println "dropping database"))
 
 (defmethod react :drop-collection [edn db]
   (println "dropping collection" ))
@@ -99,12 +110,14 @@
   "Modifies ArangoDB based upon the edn provided. The function returned takes 
    the connection created during the connection function invocation."
   [mod-file]
-  (let [edn (cedn/read-string (slurp (mod-file)))]
+  (let [edn (cedn/read-string (slurp mod-file))]
     (fn [db]
       (react edn db))))
 
-(defn- make-migration[[id [up down]]]
-  {:id id, :up (modifier-action up), :down (modifier-action down)})
+(defn- make-migration[[id [down up]]]
+  {:id id, 
+   :up (modifier-action up), 
+   :down (modifier-action down)})
 
 
 (defn- get-migration-files 

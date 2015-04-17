@@ -23,7 +23,6 @@ form.
  
  ### Examples
  
- 
  #### Creating a DB
  Say you want to create a database named *nsa-clone*,
  you would create a file named *2015-04-18-1-database.up.edn*. The contents
