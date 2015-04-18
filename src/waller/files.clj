@@ -50,20 +50,20 @@
 (defn args? [m num]
   (= num (count m)))
 
-(defn create-database [{:keys [db action] :as m}]
-  (when (and db (create? action) (args? m 2))
+(defn create-database [{:keys [action] :as m}]
+  (when (and (create? action) (args? m 1))
     :create-database))
 
-(defn create-collection [{:keys [db action collection-name] :as m}]
-  (when (and db (create? action) collection-name (args? m 3))
+(defn create-collection [{:keys [action collection-name] :as m}]
+  (when (and (create? action) collection-name (args? m 2))
     :create-collection))
 
-(defn drop-table [{:keys [db action] :as m}]
-  (when (and db (delete? action) (args? m 2))
+(defn drop-table [{:keys [action] :as m}]
+  (when (and (delete? action) (args? m 1))
     :drop-database))
 
-(defn drop-collection [{:keys [db action collection-name] :as m}]
-  (when (and db (delete? action) collection-name)
+(defn drop-collection [{:keys [action collection-name] :as m}]
+  (when (and (delete? action) collection-name (args? m 2))
     :drop-collection))
 
 (def reactors (juxt 
@@ -90,23 +90,18 @@
 
 (defmethod react :create-collection [edn db] 
   (println "Creating a collection " edn)
-  (if (core/success? (tcol/create (assoc db :db (:db edn) 
+  (if (core/success? (tcol/create (assoc db 
                                     :payload {:name (:collection-name edn)})))
     :success
     (throw (Exception. (str "Could not create collection from " edn)))))
 
 (defmethod react :drop-database [edn db]
-  (assert (core/success? (tdb/drop (assoc db :db (:db edn))))))
+  (assert (core/success? (tdb/drop db))))
 
 (defmethod react :drop-collection [edn db]
   (println "dropping collection" )
   (assert (core/success? (tcol/delete-collection 
-                 (assoc db :db (:db edn)
-                   :collection (:collection-name edn))))))
-  
-(defmethod react :default [m db]
-  (println "no impl" m))
-
+                 (assoc db :collection (:collection-name edn))))))
 ;; --------------- End Picking the Right Reaction ---------
 
 (defn- modifier-action 
