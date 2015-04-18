@@ -51,11 +51,11 @@
                      :payload {:name migration-col})))))
 
 (defn ensure-track-store!
+  "Makes sure that the database and table for migrations is stored"
   [conn]
   (let [success (ensure-tracking-database! conn)]
     (assert (= success :success))
-    (ensure-tracking-collection! conn)
-  ))
+    (ensure-tracking-collection! conn)))
 
 (defrecord ArangoDatabase
   [conn]
@@ -68,13 +68,13 @@
                   :payload {:_key id}}))
   
   (remove-migration-id [this id]
-    (tdoc/delete (assoc :db migration-db,
+    (tdoc/delete (assoc this :db migration-db,
                         :_id (str migration-col "/" id))))
   
-  (applied-migration-ids[this]
-    (:documents (tdoc/read-all-docs (assoc this :db migration-db
-                                      :in-collection migration-col
-                                      :type :key)))))
+  (applied-migration-ids [this]
+    (sort (:documents (tdoc/read-all-docs (assoc this :db migration-db
+                                            :in-collection migration-col
+                                            :type :key))))))
 
 (defn find-credentials 
   "Finds the credentials associated with the url, or an empty map if none"

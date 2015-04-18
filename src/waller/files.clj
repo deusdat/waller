@@ -63,7 +63,7 @@
     :drop-database))
 
 (defn drop-collection [{:keys [db action collection-name] :as m}]
-  (when (and db (delete? action) (args? m 2) collection-name)
+  (when (and db (delete? action) collection-name)
     :drop-collection))
 
 (def reactors (juxt 
@@ -96,10 +96,13 @@
     (throw (Exception. (str "Could not create collection from " edn)))))
 
 (defmethod react :drop-database [edn db]
-  (println "dropping database"))
+  (assert (core/success? (tdb/drop (assoc db :db (:db edn))))))
 
 (defmethod react :drop-collection [edn db]
-  (println "dropping collection" ))
+  (println "dropping collection" )
+  (assert (core/success? (tcol/delete-collection 
+                 (assoc db :db (:db edn)
+                   :collection (:collection-name edn))))))
   
 (defmethod react :default [m db]
   (println "no impl" m))
