@@ -1,4 +1,4 @@
-(defproject waller "0.1.0-SNAPSHOT"
+(defproject waller "0.5.0"
   :description "A Ragtime migration implementation for ArangoDB."
   
   :url "https://github.com/deusdat/waller"

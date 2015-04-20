@@ -105,10 +105,29 @@ To delete a collection specify the :action :drop :collection-name "a-collection"
 {:action :drop,
  :collection-name "a-collection"}
 ```
+#### Executing AQL
+Let's say you want to add a new attribute to all of your docs as part of a migration. The below will do it for you. You can even have multi-line AQL strings. The system doesn't support variable bindings since you're going to make execute a static call. 
+
+```
+{:action :modify,
+ :aql "FOR u in `testing-aql`
+         UPDATE u WITH {status : 'new'} IN `testing-aql`"}
+```
+
+To undo adding an attribute, use a migration like so.
+
+```
+{:action :modify,
+ :aql "FOR t in `testing-aql`
+         LET t1 = UNSET(t, 'status')
+         REPLACE t1 IN `testing-aql`"}
+ ```
+ 
+## Limitations
+There are third known limitaitons. The first is a migration to delete a database entirely. Since the collection tracking migrations is in the database being migrated, the database will always be created. Secondly, graphs are not supported, YET!. The travesedo driver needs to get expanded to this. Finally, the collections are currently created with their default settings. If enough people want to have collection meta-configurations like log sizes, we'll add it.
 
 ## License
 
-Copyright © 2015 FIXME
+Copyright © 2014 DeusDat Solutions.
 
-Distributed under the Eclipse Public License either version 1.0 or (at
-your option) any later version.
+Distributed under the Eclipse Public License, the same as Clojure.

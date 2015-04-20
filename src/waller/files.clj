@@ -4,7 +4,8 @@
             [waller.core :as core]
             [clojure.edn :as cedn]
             [travesedo.database :as tdb]
-            [travesedo.collection :as tcol])
+            [travesedo.collection :as tcol]
+            [travesedo.query :as tqry])
   
   (:import java.net.URI))
 
@@ -47,6 +48,9 @@
 (defn delete? [val]
   (= :drop val))
 
+(defn modify? [val]
+  (= :modify val))
+
 (defn args? [m num]
   (= num (count m)))
 
@@ -66,11 +70,16 @@
   (when (and (delete? action) collection-name (args? m 2))
     :drop-collection))
 
+(defn execute-aql [{:keys [action aql] :as m}]
+  (when (and (modify? action) aql (args? m 2))
+    :execute-aql))
+
 (def reactors (juxt 
                     create-database
                     create-collection
                     drop-table
-                    drop-collection))
+                    drop-collection
+                    execute-aql))
 
 (defn pick-reaction [m db]
   (let [reactions (remove nil? (reactors m))]
@@ -102,6 +111,10 @@
   (println "dropping collection" )
   (assert (core/success? (tcol/delete-collection 
                  (assoc db :collection (:collection-name edn))))))
+
+(defmethod react :execute-aql [edn db]
+  (assert (core/success? (tqry/aql-query (assoc db 
+                                           :payload {:query (:aql edn)})))))
 ;; --------------- End Picking the Right Reaction ---------
 
 (defn- modifier-action 
