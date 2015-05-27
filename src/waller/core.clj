@@ -9,6 +9,7 @@
 
 (def ^:private migration-db "waller-migrator")
 (def ^:private migration-col "migrations")
+(def ^:private migration-preface (str "/_api/document/" migration-col "/"))
 
 (defn create-db-users 
   "Creates a map with key of :payload with a value of {:name, :users []} if the
@@ -21,7 +22,6 @@
 (defn create-db! [conn]
   (let [req  (assoc conn 
                 :payload (merge {:name (:db conn)} (create-db-users conn)))]
-    (println req)
     (tdb/create req)))
 
 (defn success? [res]
@@ -41,7 +41,6 @@
   (let [base-conn {:conn conn}
         res (tcol/get-collection-info (assoc conn
                                         :collection migration-col))]
-    (println "Collection: " res)
     (if (success? res) 
       :success 
       (tcol/create (assoc conn
@@ -60,7 +59,7 @@
   (add-migration-id [this id]
     (ensure-track-store! this)
     (tdoc/create (merge this {:in-collection migration-col, 
-                              :payload {:_key id}})))
+                              :payload {:_key id, :id id}})))
   
   (remove-migration-id [this id]
     (ensure-track-store! this)
@@ -68,9 +67,11 @@
   
   (applied-migration-ids [this]
     (ensure-track-store! this)
-    (sort (:documents (tdoc/read-all-docs (assoc this
+    (let [ids (:documents (tdoc/read-all-docs (assoc this
                                             :in-collection migration-col
-                                            :type :key))))))
+                                            :type :key))),
+          sorted-ids (map #(cstr/replace %  migration-preface "") (sort ids))]
+      sorted-ids)))
 
 (defn find-credentials 
   "Finds the credentials associated with the url, or an empty map if none"

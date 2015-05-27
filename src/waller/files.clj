@@ -5,7 +5,9 @@
             [clojure.edn :as cedn]
             [travesedo.database :as tdb]
             [travesedo.collection :as tcol]
-            [travesedo.query :as tqry])
+            [travesedo.query :as tqry]
+            [travesedo.graph :as tgraph]
+            [travesedo.index :as tidx])
   
   (:import java.net.URI))
 
@@ -74,12 +76,27 @@
   (when (and (modify? action) aql (args? m 2))
     :execute-aql))
 
+(defn create-index [{:keys [action index collection-name] :as m}]
+  (when (and (create? action) index collection-name)
+    :create-index))
+
+(defn create-graph [{:keys [action graph] :as m}]
+  (when (and (create? action) graph (args? m 2))
+    :create-graph))
+
+(defn drop-graph [{:keys [action graph] :as m}]
+  (when (and (delete? action) graph (args? m 2))
+    :drop-graph))
+
 (def reactors (juxt 
                     create-database
                     create-collection
+                    create-graph
+                    drop-graph
                     drop-table
                     drop-collection
-                    execute-aql))
+                    execute-aql
+                    create-index))
 
 (defn pick-reaction [m db]
   (let [reactions (remove nil? (reactors m))]
@@ -97,10 +114,23 @@
                              (core/create-db-users db)))]
   (tdb/create req)))
 
+(defmethod react :create-graph [edn db]
+  (println "Attempting to create graph: " (get-in edn [:graph :name]))
+  (let [ctx (merge db {:payload (:graph edn)})
+        new-graph (tgraph/create-graph! ctx)]
+  (if (core/success? new-graph)
+    :success
+    (throw (Exception. (str "Could not create graph from " edn))))))
+
 (defmethod react :create-collection [edn db] 
   (println "Creating a collection " edn)
   (if (core/success? (tcol/create (assoc db 
                                     :payload {:name (:collection-name edn)})))
+    :success
+    (throw (Exception. (str "Could not create collection from " edn)))))
+
+(defmethod react :drop-graph [edn db] 
+  (if (core/success? (tgraph/delete-graph! (merge db edn)))
     :success
     (throw (Exception. (str "Could not create collection from " edn)))))
 
@@ -115,6 +145,9 @@
 (defmethod react :execute-aql [edn db]
   (assert (core/success? (tqry/aql-query (assoc db 
                                            :payload {:query (:aql edn)})))))
+
+(defmethod react :create-index [edn db]
+  )
 ;; --------------- End Picking the Right Reaction ---------
 
 (defn- modifier-action 

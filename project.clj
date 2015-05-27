@@ -1,4 +1,4 @@
-(defproject waller "0.5.0"
+(defproject deusdatsolutions/waller "0.6.0"
   :description "A Ragtime migration implementation for ArangoDB."
   
   :url "https://github.com/deusdat/waller"
@@ -8,4 +8,4 @@
   
   :dependencies [[org.clojure/clojure "1.6.0"]
                  [ragtime/ragtime.core "0.3.8"]
-                 [deusdatsolutions/travesedo "0.1.3"]])
+                 [deusdatsolutions/travesedo "0.5.0"]])
