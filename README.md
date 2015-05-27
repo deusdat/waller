@@ -122,12 +122,32 @@ To undo adding an attribute, use a migration like so.
          LET t1 = UNSET(t, 'status')
          REPLACE t1 IN `testing-aql`"}
  ```
+#### Basic Graphs
+To create a graph, copy the EDN below. The collections in the :from and :to must exist prior to the migration for the graph. 
+
+```
+{:action :create,
+ :graph {:name "my-graph",
+         :edge-definitions [ {:collection "allname",
+                              :from ["profile"],
+                              :to ["vertex1"]
+                              }]
+        }
+}
+```
+
+Dropping a graph is much easier. Collections remain; only the logical graph is destroyed.
+
+```
+{:action :drop,
+ :graph "my-graph"}
+```
  
 ## Limitations
-There are third known limitaitons. The first is a migration to delete a database entirely. Since the collection tracking migrations is in the database being migrated, the database will always be created. Secondly, graphs are not supported, YET!. The travesedo driver needs to get expanded to this. Finally, the collections are currently created with their default settings. If enough people want to have collection meta-configurations like log sizes, we'll add it.
+There are three known limitaitons. The first is a migration to delete a database entirely. Since the collection tracking migrations is in the database being migrated, the database will always be created. Secondly, graphs are not fully supported. You may create and drop a graph, but you can't yet use Waller to modify it. Finally, the collections are currently created with their default settings. If enough people want to have collection meta-configurations like log sizes, we'll add it.
 
 ## License
-
-Copyright © 2014 DeusDat Solutions.
-
 Distributed under the Eclipse Public License, the same as Clojure.
+
+Copyright © 2015 DeusDat Solutions.
+
