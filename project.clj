@@ -7,5 +7,6 @@
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   
   :dependencies [[org.clojure/clojure "1.6.0"]
-                 [ragtime/ragtime.core "0.3.8"]
-                 [deusdatsolutions/travesedo "0.5.0"]])
+                 [ragtime/ragtime.core "0.5.0-SNAPSHOT"]
+                 [deusdatsolutions/travesedo "0.6.0"]
+                 [resauce "0.1.0"]])

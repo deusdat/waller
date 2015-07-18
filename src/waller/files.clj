@@ -2,7 +2,6 @@
   (:require [clojure.string :as cstr]
             [clojure.java.io :as io]
             [waller.core :as core]
-            [clojure.edn :as cedn]
             [travesedo.database :as tdb]
             [travesedo.collection :as tcol]
             [travesedo.query :as tqry]
@@ -14,7 +13,7 @@
 (def ^:private default-dir "migrations")
 
 (def migration-pattern
-  #"(.*)\.(up|down)\.edn$")
+  #"(.*)\.edn$")
 
 (defn file-name [file]
   (.getName (io/file file)))
@@ -25,22 +24,11 @@
   [file]
   (re-find migration-pattern (file-name file)))
 
-(defn- migration-id 
+(defn migration-id 
   "Extracts the id from the migration files
    Taken directly from ragtime.sql.files."
   [file]
   (second (re-find migration-pattern (file-name file))))
-
-(defn- assert-migrations-complete 
-  "Makes sure that the migration exists in pairs of up and down.
-   Taken from ragtime.sql.files"
-  [migration-files]
-  (let [incomplete-files (remove #(= (count (val %)) 2)
-                                 migration-files)]
-    (assert (empty? incomplete-files)            
-            (str "Incomplete migrations found. "
-                 "Please provide up and down migration files for "
-                 (cstr/join ", " (keys incomplete-files))))))
 
 ;; -------- Picking the right reaction ----------------
 
@@ -150,42 +138,4 @@
   )
 ;; --------------- End Picking the Right Reaction ---------
 
-(defn- modifier-action 
-  "Modifies ArangoDB based upon the edn provided. The function returned takes 
-   the connection created during the connection function invocation."
-  [mod-file]
-  (let [edn (cedn/read-string (slurp mod-file))]
-    (fn [db]
-      (react edn db))))
-
-(defn- make-migration[[id [down up]]]
-  {:id id, 
-   :up (modifier-action up), 
-   :down (modifier-action down)})
-
-
-(defn- get-migration-files 
-  "Reads through directory's children to see if there are any .edn files.
-   Returns them grouped by id with the upgrade first in the list downgrade
-   second."
-  [dir]
-  (let [files (->> (.listFiles (io/file dir))
-                (filter migration?)
-                (sort)
-                (group-by migration-id))]
-    (assert-migrations-complete files)
-    files))
-
-(defn migrations
-  "Returns a list of migrations to apply. It assumes that the 
-  waller.core.connection fn was called first (implicit flow from Ragtime?) If
-  you want to create a migration seperately, you can use the [conn dir] or 
-  [conn] instances instead."
-  ([] (migrations default-dir))
-  ([conn] (migrations conn default-dir))
-  ([conn dir]
-    (->> 
-      (get-migration-files dir)
-      (map make-migration)
-      (sort-by :id))))
 
