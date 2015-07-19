@@ -11,9 +11,9 @@
   "Creates a map with key of :payload with a value of {:name, :users []} if the
    connection has credentials."
   [conn]
-  (if-let [username (:username conn)]
+  (if-let [username (:uname conn)]
     (if-let [password (:password conn)]
-      {:users [{:username username, :password password}]})))
+      {:users [{:uname username, :password password}]})))
 
 (defn create-db! [conn]
   (let [req  (assoc conn 
@@ -54,7 +54,7 @@
   "Finds the credentials associated with the url, or an empty map if none"
   [uri]
   (when-let [creds (.getUserInfo uri)]
-    (zipmap [:username :password] (cstr/split creds #":"))))
+    (zipmap [:uname :password] (cstr/split creds #":"))))
 
 (defn find-url [uri]
   (let [src-port (.getPort uri)

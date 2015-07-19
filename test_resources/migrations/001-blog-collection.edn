@@ -1,0 +1,4 @@
+{:up {:collection-name "blog",
+      :action :create},
+ :down {:collection-name "blog",
+        :action :drop}}

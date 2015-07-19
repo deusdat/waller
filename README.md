@@ -9,6 +9,10 @@ collections and execute arbitrary AQL. This library lets you do that.
 This project assumes that you are familiar with the basics of ragtime. Please
 see https://github.com/weavejester/ragtime for details.
 
+From the time of this README update, waller targets the 0.4.0 family over
+the 0.3.0 family. If you need the older version, use tag 0.6.0. That tag
+is no longer supported.
+
 ### EDN Based Migration Snippets
 
 At the center of the migration scheme is the migration DSL. It has the following
@@ -68,11 +72,12 @@ This is fairly easy.
 #### Creating a DB
  
 Say you want to create a database named *nsa-clone*,
-you would create a file named *2015-04-18-1-database.up.edn*. The contents
+you would create a file named *2015-04-18-1-database.edn*. The contents
 would look like:
  
 ```
-{ :action :create}
+{:up { :action :create},
+ :down {:action :drop}}
 ```
 
 The library will use the credentials supplied on the URL to create a default 
@@ -86,9 +91,14 @@ To create a document collection just specify the :db, :collection-name and
 :action :create.
  
 ```
-{:db "nsa-clone",
- :collection-name "emails",
+{:collection-name "emails",
  :action :create}
+```
+
+Let's name that migration 001-adds-emails-collection.edn.
+```
+{:up {:collection-name "emails", :action :create},
+ :down {:action :drop :collection-name}}
 ```
 
 #### Deleting a DB
@@ -145,6 +155,11 @@ Dropping a graph is much easier. Collections remain; only the logical graph is d
  
 ## Limitations
 There are three known limitaitons. The first is a migration to delete a database entirely. Since the collection tracking migrations is in the database being migrated, the database will always be created. Secondly, graphs are not fully supported. You may create and drop a graph, but you can't yet use Waller to modify it. Finally, the collections are currently created with their default settings. If enough people want to have collection meta-configurations like log sizes, we'll add it.
+
+## Road Map
+The next operation is allowing index addition and dropping. To support this 
+Travesedo needs updating. Given that DeusDat will need to start indexing, this
+should come sooner rather than later.
 
 ## License
 Distributed under the Eclipse Public License, the same as Clojure.
