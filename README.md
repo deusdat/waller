@@ -209,9 +209,7 @@ the server sets the default.
 There are three known limitaitons. The first is a migration to delete a database entirely. Since the collection tracking migrations is in the database being migrated, the database will always be created. Secondly, graphs are not fully supported. You may create and drop a graph, but you can't yet use Waller to modify it. Finally, the collections are currently created with their default settings. If enough people want to have collection meta-configurations like log sizes, we'll add it.
 
 ## Road Map
-The next operation is allowing index addition and dropping. To support this 
-Travesedo needs updating. Given that DeusDat will need to start indexing, this
-should come sooner rather than later.
+Add user support.
 
 ## License
 Distributed under the Eclipse Public License, the same as Clojure.
