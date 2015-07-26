@@ -97,7 +97,7 @@
 
 ;; Migration functions
 (defn migrate-from-classpath
-  [{:keys [url index dir], :or {index [], dir "migrations"}}]
+  [{:keys [url index dir], :or {index {}, dir "migrations"}}]
     (rag/migrate-all (arango-connection url)
                      index
                      (load-resources dir)))

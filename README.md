@@ -152,7 +152,59 @@ Dropping a graph is much easier. Collections remain; only the logical graph is d
 {:action :drop,
  :graph "my-graph"}
 ```
- 
+### Manipulating Indexes
+The base of the edn is the following map. The rest of the map varies by the
+type of map.
+
+```
+{:action :create,
+ :collection-name "name of collection",
+ :index :hash | :cap | :skip | :geo | :text}
+```
+
+To create a hash index add to the above map
+
+```
+{:unique true | false,
+ :fields ["paths" "of" "attributes"]}
+```
+
+To create a cap constraints index you must specify either a maximum number of
+documents per collection, or a maximum number of bytes for a collection. If
+you specify both values, Arango will evict documents based on the first met
+criteria.
+
+```
+{:size 4,
+ :byte-size 16384}
+```
+
+To create a skiplist add to the base map the following values.
+
+```
+{:unique true | false,
+ :fields ["paths" "of" "attributes"],
+ :sparse true | false}
+```
+
+To create a geo index, you only have to add fields vector
+
+```
+{:fields [geoJsonField] | [lat,long]}
+```
+
+A geo index field can either be one field that's vector of two elements
+or two fields that comprise the lat long, in that order.
+
+To create a full text index add the following to the base map.
+
+```
+{:fields ["attrA", "attrB"],
+ :min-length 5}
+```
+:min-length defines the minimum length a word needs to be indexed. If leftout,
+the server sets the default.
+
 ## Limitations
 There are three known limitaitons. The first is a migration to delete a database entirely. Since the collection tracking migrations is in the database being migrated, the database will always be created. Secondly, graphs are not fully supported. You may create and drop a graph, but you can't yet use Waller to modify it. Finally, the collections are currently created with their default settings. If enough people want to have collection meta-configurations like log sizes, we'll add it.
 

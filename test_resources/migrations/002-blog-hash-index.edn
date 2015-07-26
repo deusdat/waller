@@ -1,0 +1,5 @@
+{:up {:action :create,
+      :index :hash,
+      :collection-name blog,
+      :fields ["title"]},
+ :down {}}

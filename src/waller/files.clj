@@ -64,10 +64,6 @@
   (when (and (modify? action) aql (args? m 2))
     :execute-aql))
 
-(defn create-index [{:keys [action index collection-name] :as m}]
-  (when (and (create? action) index collection-name)
-    :create-index))
-
 (defn create-graph [{:keys [action graph] :as m}]
   (when (and (create? action) graph (args? m 2))
     :create-graph))
@@ -75,6 +71,26 @@
 (defn drop-graph [{:keys [action graph] :as m}]
   (when (and (delete? action) graph (args? m 2))
     :drop-graph))
+
+(defn create-hash-index [{:keys [action index collection-name fields] :as m}]
+  (when (and (create? action) (= :hash index) collection-name fields)
+    :create-hash-index))
+
+(defn create-fulltext-index [{:keys [action index collection-name fields] :as m}]
+  (when (and (create? action) (= :text index) collection-name fields)
+    :create-fulltext-index))
+
+(defn create-geo-index [{:keys [action index collection-name fields] :as m}]
+  (when (and (create? action) (= :geo index) collection-name fields)
+    :create-geo-index))
+
+(defn create-skiplist-index [{:keys [action index collection-name fields] :as m}]
+  (when (and (create? action) (= :skip index) collection-name fields)
+    :create-skiplist-index))
+
+(defn create-cap-index [{:keys [action index collection-name fields] :as m}]
+  (when (and (create? action) (= :cap index) collection-name fields)
+    :create-cap-index))
 
 (def reactors (juxt 
                     create-database
@@ -84,16 +100,56 @@
                     drop-table
                     drop-collection
                     execute-aql
-                    create-index))
+                    ;; Added 7/25/2015
+                    create-cap-index
+                    create-hash-index
+                    create-fulltext-index
+                    create-geo-index
+                    create-skiplist-index))
 
-(defn pick-reaction [m db]
-  (let [reactions (remove nil? (reactors m))]
-    (assert (= 1 (count reactions)) (str "Non-nil reactions " 
-                                      (print-str reactions)))
+(defn pick-reaction [edn db]
+  (let [reactions (remove nil? (reactors edn))]
+    (assert (= 1 (count reactions)) 
+            (str "Non-nil reactions " (print-str reactions)))
     (first reactions)))
   
 
 (defmulti react pick-reaction)
+
+(defmethod react :create-hash-index [edn db]
+  (println "Attempting to create hash index for " (:collection-name edn))
+  (assert (core/success? (tidx/create-hash! db 
+                                            (:collection-name edn)
+                                            (:fields edn)
+                                            (or (:unique edn) false)))))
+
+(defmethod react :create-geo-index [edn db]
+  (println "Attempting to create geo index for " (:collection-name edn))
+  (assert (core/success? (tidx/create-geo! db 
+                                            (:collection-name edn)
+                                            (:fields edn)))))
+
+(defmethod react :create-cap-index [edn db]
+  (println "Attempting to create cap index for " (:collection-name edn))
+  (assert (core/success? (tidx/create-cap-constraint! db 
+                                           (:collection-name edn)
+                                           (select-keys edn [:size :byte-size])))))
+
+(defmethod react :create-fulltext-index [edn db]
+  (println "Attempting to create fulltext index for " (:collection-name edn))
+  (assert (core/success? (apply tidx/create-fulltext! 
+                                (remove nil? [db 
+                                              (:collection-name edn)
+                                              (:fields edn)
+                                              (:min-length edn)])))))
+
+(defmethod react :create-skiplist-index [edn db]
+  (println "Attempting to create skiplist index for " (:collection-name edn))
+  (assert (core/success? (tidx/create-skiplist! db 
+                                            (:collection-name edn)
+                                            (:fields edn)
+                                            (or (:unique edn) false)
+                                            (or (:sparse edn) false)))))
 
 (defmethod react :create-database [edn db] 
   (println "Attempting to create database: " (:db edn))
