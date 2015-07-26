@@ -209,7 +209,7 @@ the server sets the default.
 There are three known limitaitons. The first is a migration to delete a database entirely. Since the collection tracking migrations is in the database being migrated, the database will always be created. Secondly, graphs are not fully supported. You may create and drop a graph, but you can't yet use Waller to modify it. Finally, the collections are currently created with their default settings. If enough people want to have collection meta-configurations like log sizes, we'll add it.
 
 ## Road Map
-Add user support.
+Add user support. Add migration down support for indexes.
 
 ## License
 Distributed under the Eclipse Public License, the same as Clojure.
