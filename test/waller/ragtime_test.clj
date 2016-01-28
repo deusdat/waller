@@ -41,4 +41,6 @@
         blog-indexes (tidx/read-all ctx "blog")
         indexes (:indexes blog-indexes)]
     (is (= 2 (count (:names c))))
-    (is (= 2 (count indexes)))))
+    (is (= 2 (count indexes)))
+    )
+  (migrate-from-classpath {:url "arango://arangodb27:8529/waller"}))

@@ -32,8 +32,8 @@
     (ensure-track-store! this  migration-col)
     (let [id-ctx (assoc this :in-collection migration-col :type :key),
           ids (:documents (tdoc/read-all-docs id-ctx)),
-          sorted-ids (map #(cstr/replace %  (migration-url migration-col) "") 
-                          (sort ids))]
+          path-sep #"/"
+          sorted-ids (map #(last (cstr/split %  path-sep)) (sort ids))]
       sorted-ids)))
 
 (defn arango-connection
