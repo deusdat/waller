@@ -28,14 +28,14 @@
 
 (deftest loads-edns
   (println "Loading edns")
-  (let [edns (load-resources "migrations")]
+  (let [edns (load-resources "migrationst")]
     (is (= 2 (count edns)))))
 
 (deftest integration-test
   ;; Makes sure that the database is returned to normal.
   (let [c  (db/drop ctx)]
     (is (some #{(:code c)} '(200 404))))
-  (migrate-from-classpath {:url "arango://arangodb27:8529/waller"})
+  (migrate-from-classpath {:url "arango://arangodb27:8529/waller" :dir "migrationst"})
   (let [c (col/get-all-collections (merge ctx {:exclude-system true}))
         blog (:blog (:names c))
         blog-indexes (tidx/read-all ctx "blog")
@@ -43,4 +43,4 @@
     (is (= 2 (count (:names c))))
     (is (= 2 (count indexes)))
     )
-  (migrate-from-classpath {:url "arango://arangodb27:8529/waller"}))
+  (migrate-from-classpath {:url "arango://arangodb27:8529/waller" :dir "migrationst"}))
