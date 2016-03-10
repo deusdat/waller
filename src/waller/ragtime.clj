@@ -47,7 +47,9 @@
   p/Migration
   (id [_] id)
   (run-up!   [_ db] (react up db))
-  (run-down! [_ db] (react down db)))
+  (run-down! [_ db] (react down db))
+  (toString[_]
+    (println (cstr/join " " [id up down]))))
 
 (defn arango-migration 
   "Converts untyped map into Ragtime Migration"
