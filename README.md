@@ -21,7 +21,8 @@ form.
 ```
 {:action [:create | :drop | :modify],
  :collection-name "a-collection-name",
- :aql "String of AQL"}
+ :aql "String of AQL",
+ :fn ns.somwhere/no-arg-fn}
  ```
  
 You must provide the :action keys. After that, the DSL provides the
@@ -204,6 +205,32 @@ To create a full text index add the following to the base map.
 ```
 :min-length defines the minimum length a word needs to be indexed. If leftout,
 the server sets the default.
+
+### Creating arbitrary AQL
+While there are time where modifying a bulk collections is what you want, which
+the :aql option supports, there are times where you'll need to access the 
+environment to create the AQL. For example, you need to create documents in your
+user table for your system accounts. You don't want to include their credentials
+in the the source control.
+
+That's where this feature comes in. The :fn key points to a function that takes
+no arguments and returns an AQL statement.
+
+```
+{:action :modify
+ :fn hms-api.data.migration/add-web-user!}
+```
+
+The function itself creates AQL in the following way.
+
+```
+(defn add-web-user! []
+  (str "INSERT {groups: ['web'], username: '" 
+       (env :webusername) "', password: '" 
+       (env :webpassword) "'} IN accounts"))
+```
+
+The password store in the environment variable is pre-hashed.
 
 ## Limitations
 There are three known limitaitons. The first is a migration to delete a database entirely. Since the collection tracking migrations is in the database being migrated, the database will always be created. Secondly, graphs are not fully supported. You may create and drop a graph, but you can't yet use Waller to modify it. Finally, the collections are currently created with their default settings. If enough people want to have collection meta-configurations like log sizes, we'll add it.

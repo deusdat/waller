@@ -64,6 +64,10 @@
   (when (and (modify? action) aql (args? m 2))
     :execute-aql))
 
+(defn execute-aql-maker [{:keys [action fn] :as m}]
+  (when (and (modify? action) fn (args? m 2))
+    :execute-aql-maker))
+
 (defn create-graph [{:keys [action graph] :as m}]
   (when (and (create? action) graph (args? m 2))
     :create-graph))
@@ -93,6 +97,7 @@
     :create-cap-index))
 
 (def reactors (juxt 
+                    execute-aql-maker
                     create-database
                     create-collection
                     create-graph
@@ -189,6 +194,20 @@
 (defmethod react :execute-aql [edn db]
   (assert (core/success? (tqry/aql-query (assoc db 
                                            :payload {:query (:aql edn)})))))
+
+(defn ppass [o]
+  (println o)
+  o)
+
+(defmethod react :execute-aql-maker [edn db]
+  (println "Attempting to run fn " edn)
+  (let [f (:fn edn)]
+    (assert (symbol? f) ":fn must be a symbol")
+    (if-let [aql-maker (resolve f)]
+      (assert  (core/success? (tqry/aql-query 
+                                (assoc db :payload {:query (ppass (aql-maker))}))))
+      (throw (Exception.
+                    (str "Cannot find the fn you want to migrate " f))))))
 
 (defmethod react :create-index [edn db]
   )
