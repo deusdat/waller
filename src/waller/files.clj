@@ -204,8 +204,9 @@
   (let [f (:fn edn)]
     (assert (symbol? f) ":fn must be a symbol")
     (if-let [aql-maker (resolve f)]
-      (assert  (core/success? (tqry/aql-query 
-                                (assoc db :payload {:query (ppass (aql-maker))}))))
+      (doseq [query (flatten (conj [] (aql-maker)))]
+        (assert (core/success? (tqry/aql-query 
+                                 (assoc db :payload {:query (ppass query)})))))
       (throw (Exception.
                     (str "Cannot find the fn you want to migrate " f))))))
 
